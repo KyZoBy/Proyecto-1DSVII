@@ -1,0 +1,119 @@
+/* Estructura base */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Open Sans', sans-serif;
+    background: linear-gradient(to right, #fef6f6, #faebeb);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-container {
+    background: #ffffff;
+    padding: 40px 60px;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f5d6d6;
+    max-width: 1000px;
+    width: 90%;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.form-container::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: -8px;
+    right: -8px;
+    bottom: -8px;
+    border-radius: 14px;
+    background: linear-gradient(45deg, #e53935, #ff6f61);
+    z-index: -1;
+    opacity: 0.1;
+}
+
+.form-container h2 {
+    font-size: 30px;
+    color: #e53935;
+    margin-bottom: 30px;
+    padding-left: 14px;
+    border-left: 4px solid #e53935;
+}
+
+/* Diseño en 2 columnas para pantallas grandes */
+form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px 40px;
+}
+
+/* Campos que ocupan todo el ancho */
+.full-width {
+    grid-column: 1 / -1;
+}
+
+form label {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: #444;
+    display: block;
+}
+
+form input,
+form textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 15px;
+    background: #fdfdfd;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+form input:focus,
+form textarea:focus {
+    border-color: #e53935;
+    outline: none;
+}
+
+/* Botón */
+button {
+    padding: 14px;
+    background: #e53935;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background: #c62828;
+}
+
+/* Responsive: 1 columna en pantallas pequeñas */
+@media (max-width: 768px) {
+    form {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .form-container {
+        padding: 30px 20px;
+    }
+
+    .form-container h2 {
+        font-size: 24px;
+    }
+
+    button {
+        width: 100%;
+    }
+}
