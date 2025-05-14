@@ -1,6 +1,8 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #eef1f5;
+    background: url(../images/welcome-hero/banner2.jpg);
+    background-position:center;
+    background-size:cover;
     padding: 40px;
 }
 
@@ -29,7 +31,7 @@ body {
 
 .register-form input {
     width: 100%;
-    padding: 10px;
+    padding: 5px;
     margin-top: 5px;
     border: 1px solid #ccc;
     border-radius: 6px;
@@ -38,7 +40,7 @@ body {
 
 .register-form button {
     margin-top: 20px;
-    width: 100%;
+    width: 103%;
     padding: 12px;
     background-color: #3498db;
     color: white;
@@ -51,4 +53,16 @@ body {
 
 .register-form button:hover {
     background-color: #2980b9;
+}
+
+/* Responsive: 1 columna en pantallas pequeñas */
+@media (max-width: 560px) {
+    .register-form{
+        width: 300px;
+    }
+}
+@media (max-width: 445px) {
+    .register-form{
+        width: 200px;
+    }
 }
