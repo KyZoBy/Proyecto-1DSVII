@@ -1,0 +1,183 @@
+.contenedorProducto {
+    width: 80%;
+    margin: auto;
+    display: grid;
+     grid-template-columns: 500px auto;
+     grid-template-rows: auto;
+}
+.imagenLaptop{
+    height: 100%;
+    width: 100%;
+}
+.imagenProducto{
+    height: 400px;
+    width: 500px;
+}
+.nombreProducto{
+    font-size: 35px;
+    color: black;
+    height: 100%;
+    width: 100%;
+    grid-column-start: 1;
+    grid-column-end: 4;
+}
+.precioProducto{
+    padding-top: 40px;
+    height: 100%;
+    width: 100%;
+    font-size: 35px;
+    color: black;
+}
+.botonComprar{
+    padding-left: 15px;
+    padding-top: 40px;
+    align-self: flex-start;
+    height: 100%;
+    width: 100%;
+    color: #ffffff;
+}
+.boton{
+    height: 50px;
+    width: 25%;
+    font-size: large;
+    border: 1px;
+    background:  #ff545a;
+    border-style: solid;
+    border-radius: 3px;
+}
+.descripcionProducto{
+    height: 100%;
+    width: 100%;
+    grid-column-start: 1;
+    grid-column-end: 4;
+
+}
+.impuestos{
+    padding-top: 55px;
+    font-size: 18px;
+    padding-left: 2px;
+}
+.contenedorDetalles{
+    padding-left: 10px;
+    display: grid;
+    grid-template-columns: auto 100px 700px;
+    grid-template-rows: auto auto auto;
+}
+
+@media (max-width: 1400px) {
+    .nombreProducto{
+        width: 75%;
+    }
+    .descripcionProducto{
+        width: 75%;
+    }
+    .contenedorProducto {
+    grid-template-columns: 400px auto;
+    grid-template-rows: auto;
+    }
+    .imagenLaptop{
+        height: 100%;
+        width: 100%;
+    }
+    .imagenProducto{
+        height: 300px;
+        width: 400px;
+    }
+}
+
+@media (max-width: 1300px) {
+    .nombreProducto{
+        width: 50%;
+    }
+    .descripcionProducto{
+        width: 50%;
+    }
+}
+@media (max-width: 1000px) {
+    .contenedorDetalles{
+        grid-template-columns: 170px 100px 700px;
+        grid-template-rows: auto auto auto auto;
+    }
+    .nombreProducto{
+        width: 25%;
+    }
+    .descripcionProducto{
+        width: 35%;
+    }
+    .botonComprar{
+        grid-row-start: 3;
+        padding-left: 0px;
+        padding-top: 0px;
+    }
+    .boton{
+        width: 100%;
+    }
+}
+@media (max-width: 900px) {
+    .contenedorDetalles{
+        grid-template-columns: 100px 100px 700px;
+        grid-template-rows: auto auto auto auto;
+    }
+    .descripcionProducto{
+        width: 25%;
+    }
+}
+@media (max-width:700px){
+        .contenedorProducto {
+    grid-template-columns: 300px auto;
+    grid-template-rows: auto;
+    }
+    .imagenLaptop{
+        height: 100%;
+        width: 100%;
+    }
+    .imagenProducto{
+        height: 200px;
+        width: 300px;
+    }
+}
+
+@media (max-width:600px){
+        .contenedorProducto {
+    margin: 0px;
+    grid-template-columns: 300px auto;
+    grid-template-rows: auto;
+    }
+    .imagenLaptop{
+        height: 100%;
+        width: 100%;
+    }
+    .imagenProducto{
+        height: 200px;
+        width: 300px;
+    }
+}
+@media (max-width:500px){
+            .contenedorProducto {
+    margin: 0px;
+    grid-template-columns: 200px auto;
+    grid-template-rows: auto;
+    }
+    .imagenLaptop{
+        height: 100%;
+        width: 100%;
+    }
+    .imagenProducto{
+        height: 100px;
+        width: 200px;
+    }
+    .nombreProducto{
+    font-size: 25px;
+}
+.precioProducto{
+    font-size: 25px;
+}
+
+.impuestos{
+    font-size: 10px;
+}
+.descripcionProducto{
+    font-size: 10px;
+
+}
+}
