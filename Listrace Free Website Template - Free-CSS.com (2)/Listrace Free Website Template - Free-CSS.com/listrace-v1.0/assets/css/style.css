@@ -243,11 +243,11 @@ nav.navbar.bootsnav .navbar-toggle i{color: #ff545a;}
 --------------------------------------*/
 .welcome-hero {
     position: relative;
-    background:url(../images/welcome-hero/banner2.jpg)no-repeat;
+    background:url(../images/welcome-hero/logito.jpg)no-repeat;
     background-position:center;
     background-size:cover;
     text-align: center;
-    height:800px;
+    height:900px;
     z-index: 1;
 }
 .welcome-hero:before{
