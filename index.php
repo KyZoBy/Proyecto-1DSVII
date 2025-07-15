@@ -1,4 +1,8 @@
 <!doctype html>
+<?php
+session_start(); // Start the session
+$session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
+?>
 <html class="no-js" lang="en">
 
     <head>
@@ -52,7 +56,6 @@
 			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-
     </head>
 	
 	<body>
@@ -92,10 +95,32 @@
 								+507 6767-6767
 							</li>
 							<li class="header-top-contact">
-								<a href="logueo.html">Inicio sesión</a>
+								<a href="logueo.html" id="Inicio">Inicio sesión
+								<script>
+									var myvar='<?php echo $session_value;?>';
+									if (myvar === ""){
+										document.getElementById("Inicio").innerHTML = "Iniciar sesion";
+										document.getElementById("Inicio").href = "logueo.html";
+									}
+									else{
+										document.getElementById("Inicio").innerHTML = myvar;
+										document.getElementById("Inicio").href = "";
+									}
+								</script>
 							</li>
 							<li class="header-top-contact">
-								<a href="register.html">Registro</a>
+								<a href="register.html" id="Registro">Registro</a>
+								<script>
+									var myvar='<?php echo $session_value;?>';
+									if (myvar === ""){
+										document.getElementById("Registro").innerHTML = "Registrar";
+										document.getElementById("Registro").href = "register.html";
+									}
+									else{
+										document.getElementById("Registro").innerHTML = "Cerrar Sesion";
+										document.getElementById("Registro").href = "cerrarSesion.php";
+									}
+								</script>
 							</li>
 						</ul>
 					</div>
