@@ -1,4 +1,50 @@
 <!DOCTYPE html>
+<?php
+session_start(); // Start the session
+$session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
+require_once("dbcontroller.php");
+$db_handle = new DBController();
+if(!empty($_GET["action"])) {
+switch($_GET["action"]) {
+	case "add":
+		if(!empty($_POST["quantity"])) {
+			$productByCode = $db_handle->runQuery("CALL `pa_productoPorCodigo`('" . $_GET["code"] . "')");
+			$itemArray = array($productByCode[0]["code"]=>array('name'=>$productByCode[0]["name"], 'code'=>$productByCode[0]["code"], 'quantity'=>$_POST["quantity"], 'price'=>$productByCode[0]["price"], 'image'=>$productByCode[0]["image"]));
+			
+			if(!empty($_SESSION["cart_item"])) {
+				if(in_array($productByCode[0]["code"],array_keys($_SESSION["cart_item"]))) {
+					foreach($_SESSION["cart_item"] as $k => $v) {
+							if($productByCode[0]["code"] == $k) {
+								if(empty($_SESSION["cart_item"][$k]["quantity"])) {
+									$_SESSION["cart_item"][$k]["quantity"] = 0;
+								}
+								$_SESSION["cart_item"][$k]["quantity"] += $_POST["quantity"];
+							}
+					}
+				} else {
+					$_SESSION["cart_item"] = array_merge($_SESSION["cart_item"],$itemArray);
+				}
+			} else {
+				$_SESSION["cart_item"] = $itemArray;
+			}
+		}
+	break;
+	case "remove":
+		if(!empty($_SESSION["cart_item"])) {
+			foreach($_SESSION["cart_item"] as $k => $v) {
+					if($_GET["code"] == $k)
+						unset($_SESSION["cart_item"][$k]);				
+					if(empty($_SESSION["cart_item"]))
+						unset($_SESSION["cart_item"]);
+			}
+		}
+	break;
+	case "empty":
+		unset($_SESSION["cart_item"]);
+	break;	
+}
+}
+?>
 <html lang="es">
 <head>
         <!-- meta data -->
@@ -12,7 +58,7 @@
 		<link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
         
         <!-- title of site -->
-        <title>Acer Predator</title>
+        <title>Asus ROG Strix</title>
 
         <!-- For favicon png -->
 		<link rel="shortcut icon" type="image/icon" href="assets/logo/favicon.png"/>
@@ -44,6 +90,8 @@
         
         <!--responsive.css-->
         <link rel="stylesheet" href="assets/css/responsive.css">
+
+		<link href="style.css" type="text/css" rel="stylesheet" />
         
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -80,6 +128,11 @@
 							<li class="select-opt">
 								<a href="#"><span class="lnr lnr-magnifier"></span></a>
 							</li>
+							<li>
+										<button id="carritoCompra">
+		<img src="assets/img/cart.png" height="20px" width="20px"/>
+	</button>
+							</li>
 						</ul>
 					</div>
 				</li>
@@ -90,16 +143,118 @@
 								+507 6767-6767
 							</li>
 							<li class="header-top-contact">
-								<a href="logueo.html">Inicio sesión</a>
+								<a href="logueo.html" id="Inicio">Inicio sesión
+								<script>
+									var myvar='<?php echo $session_value;?>';
+									if (myvar === ""){
+										document.getElementById("Inicio").innerHTML = "Iniciar sesion";
+										document.getElementById("Inicio").href = "logueo.html";
+									}
+									else{
+										document.getElementById("Inicio").innerHTML = myvar;
+										document.getElementById("Inicio").href = "";
+									}
+								</script>
 							</li>
 							<li class="header-top-contact">
-								<a href="register.html">Registro</a>
+								<a href="register.html" id="Registro">Registro</a>
+								<script>
+									var myvar='<?php echo $session_value;?>';
+									if (myvar === ""){
+										document.getElementById("Registro").innerHTML = "Registrar";
+										document.getElementById("Registro").href = "register.html";
+									}
+									else{
+										document.getElementById("Registro").innerHTML = "Cerrar Sesion";
+										document.getElementById("Registro").href = "cerrarSesion.php";
+									}
+								</script>
 							</li>
 						</ul>
 					</div>
 				</li>
 			</ul>
-					
+				<div id="shopping-cart" style="display: none">
+					<div class="txt-heading">Carrito de compra
+
+					</div>
+					<script>
+						const botonCarrito = document.getElementById("carritoCompra")
+						const elementoCarrito = document.getElementById("shopping-cart")
+						botonCarrito.addEventListener("click", event => {
+							if (elementoCarrito.style.display === "none"){
+								elementoCarrito.style.display = "block"
+							}
+							else{
+								elementoCarrito.style.display = "none";
+							}
+						})
+					</script>
+					<a id="btnEmpty" href="productoRog_strix.php?action=empty">Vaciar carrito</a>
+					<?php
+					if(isset($_SESSION["cart_item"])){
+						$total_quantity = 0;
+						$subtotal_price = 0;
+						$itbms = 0;
+						$total_price = 0;
+					?>	
+					<table class="tbl-cart" cellpadding="10" cellspacing="1">
+						<tbody>
+							<tr>
+								<th style="text-align:left;">Nombre</th>
+								<th style="text-align:left;">Codigo</th>
+								<th style="text-align:right;" width="5%">Cantidad</th>
+								<th style="text-align:right;" width="10%">Precio unitario</th>
+								<th style="text-align:right;" width="10%">Price</th>
+								<th style="text-align:center;" width="5%">Remover</th>
+							</tr>	
+							<?php		
+								foreach ($_SESSION["cart_item"] as $item){
+									$item_price = $item["quantity"]*$item["price"];
+									?>
+											<tr>
+											<td><img src="<?php echo $item["image"]; ?>" class="cart-item-image" /><?php echo $item["name"]; ?></td>
+											<td><?php echo $item["code"]; ?></td>
+											<td style="text-align:right;"><?php echo $item["quantity"]; ?></td>
+											<td  style="text-align:right;"><?php echo "$ ".$item["price"]; ?></td>
+											<td  style="text-align:right;"><?php echo "$ ". number_format($item_price,2); ?></td>
+											<td style="text-align:center;"><a href="productoRog_strix.php?action=remove&code=<?php echo $item["code"]; ?>" class="btnRemoveAction"><img src="assets/img/icon-delete.png" alt="Remove Item" /></a></td>
+											</tr>
+											<?php
+											$total_quantity += $item["quantity"];
+											$subtotal_price += ($item["price"]*$item["quantity"]);
+											$itbms = $subtotal_price * 0.07;
+											$total_price = $subtotal_price + $itbms;
+									}
+							?>
+							<tr>
+								<td colspan="2" align="right">Subtotal:</td>
+								<td align="right"></td>
+								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($subtotal_price, 2); ?></strong></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td colspan="2" align="right">Itbms:</td>
+								<td align="right"></td>
+								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($itbms, 2); ?></strong></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td colspan="2" align="right">Total:</td>
+								<td align="right"><?php echo $total_quantity; ?></td>
+								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($total_price, 2); ?></strong></td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>		
+					<?php
+					} else {
+					?>
+					<div class="no-records">Tu carrito esta vacio</div>
+					<?php 
+					}
+					?>
+				</div>	
 		</header><!--/.header-top-->
 		<!--header-top end -->
 
@@ -116,7 +271,7 @@
 			                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-menu">
 			                    <i class="fa fa-bars"></i>
 			                </button>
-			                <a class="navbar-brand" href="index.html">Laptop<span>Fast</span></a>
+			                <a class="navbar-brand" href="index.php">Laptop<span>Fast</span></a>
 
 			            </div><!--/.navbar-header-->
 			            <!-- End Header Navigation -->
@@ -124,7 +279,7 @@
 			            <!-- Collect the nav links, forms, and other content for toggling -->
 			            <div class="collapse navbar-collapse menu-ui-design" id="navbar-menu">
 			                <ul class="nav navbar-nav navbar-right" data-in="fadeInDown" data-out="fadeOutUp">
-			                    <li><a href="index.html">Inicio</a></li>
+			                    <li><a href="index.php">Inicio</a></li>
 			                    <li class="scroll"><a href="#works">Descubre</a></li>
 			                    <li class="scroll"><a href="#explore">Explora</a></li>
 			                    <li class="scroll"><a href="#reviews">Crítica</a></li>
@@ -141,13 +296,15 @@
 			<!-- Contenedor de producto -->
         <section class="producto">
             <div class="contenedorProducto">
-                <div class="imagenProducto"><img src="assets/img/predator.jpg" alt="Acer Nitro" class="imagenLaptop"></div>
+                <div class="imagenProducto"><img src="assets/img/rog_strix.jpg" alt="Acer Nitro" class="imagenLaptop"></div>
                 <div class="contenedorDetalles">
-                    <div class="nombreProducto">ACER PREDATOR HELIOS NEO 16 / PORTATIL DE 16 WQXGA IPS 165HZ / RTX 4060 / INTEL CORE I7-13700HX / 16GB DDR5 / 1TB NVME / WIN 11 HOME</div>
-                    <div class="precioProducto">$1,139.99 </div>
+                    <div class="nombreProducto">Laptop Gaming ASUS ROG Strix G16, 165Hz Display, NVIDIA® GeForce RTX™ 4060, Intel Core i7-13650HX, 16GB DDR5, 1TB PCIe Gen4 SSD, Wi-Fi 6E, Windows 11, G614JV-AS74</div>
+                    <div class="precioProducto">$1,244.78 </div>
                     <div class="impuestos"> +impuestos</div>
-                    <div class="botonComprar"><button class="boton">COMPRAR</button></div>
-                    <div class="descripcionProducto">Este ordenador incluye 16 GB de RAM | SSD de 1024 GB | HDD de 1 TB. Pantalla IPS de 15,6'' Full HD (1920 x 1080) con retroiluminación LED y frecuencia de actualización de 144 Hz. Es un SoC de ocho núcleos de alta gama para portátiles gaming y estaciones de trabajo móviles. Pertenece a la familia Tiger Lake H45 y se anunció a mediados de 2021. El 11800H incorpora 8 núcleos y 16 subprocesos con 24 MB de caché L3, una velocidad base de 2,3 GHz a 45 W, además de frecuencias turbo que van desde 4,6 GHz en hasta 2 núcleos hasta 4,2 GHz en todos los núcleos. Además, cuenta con un diseño de GPU Xe integrado con 32 unidades de ejecución y velocidades de reloj de hasta 1450 MHz. GPU para computadora portátil NVIDIA GeForce RTX 3070, teclado retroiluminado RGB de 4 zonas, cámara web HD (1280 x 720) compatible con Super High Dynamic Range, Windows 11 Home.</div>
+                    <form method="post" action="productoRog_strix.php?action=add&code=LPG16">
+                    <div class="botonComprar"> <input type="submit" value="COMPRAR" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
+					</form>
+                    <div class="descripcionProducto">POTENCIA TU JUEGO: Gana más juegos con Windows 11, un procesador Intel Core i7-13650HX de 13.ª generación y una GPU NVIDIA GeForce RTX 4060 para portátiles con 140 W de TGP máximo. MEMORIA Y ALMACENAMIENTO ULTRA RÁPIDOS: Realiza múltiples tareas con agilidad gracias a sus 16 GB de memoria DDR5 a 4800 MHz y 1 TB de SSD PCIe Gen4. REFRIGERACIÓN INTELIGENTE ROG: El Strix G16 incorpora metal líquido Conductonaut Extreme de Thermal Grizzly en la CPU y un tercer ventilador de entrada, entre otras características premium, para un rendimiento más sostenido durante largas sesiones de juego. PANTALLA RÁPIDA: El Strix G16 cuenta con un panel FHD de 165 Hz, 100 % sRGB, validación Pantone, entre otras características premium. XBOX GAME PASS: Obtén un pase gratuito de 90 días y accede a más de 100 juegos de alta calidad. Con juegos añadidos constantemente, siempre hay algo nuevo para jugar.</div>
                 </div>
             </div>
         </section>
@@ -158,7 +315,7 @@
 		           	<div class="row">
 			           	<div class="col-sm-3">
 			           		 <div class="navbar-header">
-				                <a class="navbar-brand" href="index.html">Laptop<span>Fast</span></a>
+				                <a class="navbar-brand" href="index.php">Laptop<span>Fast</span></a>
 				            </div><!--/.navbar-header-->
 			           	</div>
 			           	<div class="col-sm-9">

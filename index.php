@@ -2,6 +2,48 @@
 <?php
 session_start(); // Start the session
 $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
+require_once("dbcontroller.php");
+$db_handle = new DBController();
+if(!empty($_GET["action"])) {
+switch($_GET["action"]) {
+	case "add":
+		if(!empty($_POST["quantity"])) {
+			$productByCode = $db_handle->runQuery("CALL `pa_productoPorCodigo`(" . $_GET["code"] . ")");
+			$itemArray = array($productByCode[0]["code"]=>array('name'=>$productByCode[0]["name"], 'code'=>$productByCode[0]["code"], 'quantity'=>$_POST["quantity"], 'price'=>$productByCode[0]["price"], 'image'=>$productByCode[0]["image"]));
+			
+			if(!empty($_SESSION["cart_item"])) {
+				if(in_array($productByCode[0]["code"],array_keys($_SESSION["cart_item"]))) {
+					foreach($_SESSION["cart_item"] as $k => $v) {
+							if($productByCode[0]["code"] == $k) {
+								if(empty($_SESSION["cart_item"][$k]["quantity"])) {
+									$_SESSION["cart_item"][$k]["quantity"] = 0;
+								}
+								$_SESSION["cart_item"][$k]["quantity"] += $_POST["quantity"];
+							}
+					}
+				} else {
+					$_SESSION["cart_item"] = array_merge($_SESSION["cart_item"],$itemArray);
+				}
+			} else {
+				$_SESSION["cart_item"] = $itemArray;
+			}
+		}
+	break;
+	case "remove":
+		if(!empty($_SESSION["cart_item"])) {
+			foreach($_SESSION["cart_item"] as $k => $v) {
+					if($_GET["code"] == $k)
+						unset($_SESSION["cart_item"][$k]);				
+					if(empty($_SESSION["cart_item"]))
+						unset($_SESSION["cart_item"]);
+			}
+		}
+	break;
+	case "empty":
+		unset($_SESSION["cart_item"]);
+	break;	
+}
+}
 ?>
 <html class="no-js" lang="en">
 
@@ -48,6 +90,7 @@ $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
         
         <!--responsive.css-->
         <link rel="stylesheet" href="assets/css/responsive.css">
+		<link href="style.css" type="text/css" rel="stylesheet" />
         
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
         <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -84,6 +127,11 @@ $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
 							</li>
 							<li class="select-opt">
 								<a href="#"><span class="lnr lnr-magnifier"></span></a>
+							</li>
+							<li>
+										<button id="carritoCompra">
+		<img src="assets/img/cart.png" height="20px" width="20px"/>
+	</button>
 							</li>
 						</ul>
 					</div>
@@ -126,7 +174,87 @@ $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
 					</div>
 				</li>
 			</ul>
-					
+				<div id="shopping-cart" style="display: none">
+					<div class="txt-heading">Carrito de compra
+
+					</div>
+					<script>
+						const botonCarrito = document.getElementById("carritoCompra")
+						const elementoCarrito = document.getElementById("shopping-cart")
+						botonCarrito.addEventListener("click", event => {
+							if (elementoCarrito.style.display === "none"){
+								elementoCarrito.style.display = "block"
+							}
+							else{
+								elementoCarrito.style.display = "none";
+							}
+						})
+					</script>
+					<a id="btnEmpty" href="index.php?action=empty">Vaciar carrito</a>
+					<?php
+					if(isset($_SESSION["cart_item"])){
+						$total_quantity = 0;
+						$subtotal_price = 0;
+						$itbms = 0;
+						$total_price = 0;
+					?>	
+					<table class="tbl-cart" cellpadding="10" cellspacing="1">
+						<tbody>
+							<tr>
+								<th style="text-align:left;">Nombre</th>
+								<th style="text-align:left;">Codigo</th>
+								<th style="text-align:right;" width="5%">Cantidad</th>
+								<th style="text-align:right;" width="10%">Precio unitario</th>
+								<th style="text-align:right;" width="10%">Precio</th>
+								<th style="text-align:center;" width="5%">Remover</th>
+							</tr>	
+							<?php		
+								foreach ($_SESSION["cart_item"] as $item){
+									$item_price = $item["quantity"]*$item["price"];
+									?>
+											<tr>
+											<td><img src="<?php echo $item["image"]; ?>" class="cart-item-image" /><?php echo $item["name"]; ?></td>
+											<td><?php echo $item["code"]; ?></td>
+											<td style="text-align:right;"><?php echo $item["quantity"]; ?></td>
+											<td  style="text-align:right;"><?php echo "$ ".$item["price"]; ?></td>
+											<td  style="text-align:right;"><?php echo "$ ". number_format($item_price,2); ?></td>
+											<td style="text-align:center;"><a href="index.php?action=remove&code=<?php echo $item["code"]; ?>" class="btnRemoveAction"><img src="assets/img/icon-delete.png" alt="Remove Item" /></a></td>
+											</tr>
+											<?php
+											$total_quantity += $item["quantity"];
+											$subtotal_price += ($item["price"]*$item["quantity"]);
+											$itbms = $subtotal_price * 0.07;
+											$total_price = $subtotal_price + $itbms;
+									}
+							?>
+							<tr>
+								<td colspan="2" align="right">Subtotal:</td>
+								<td align="right"></td>
+								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($subtotal_price, 2); ?></strong></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td colspan="2" align="right">Itbms:</td>
+								<td align="right"></td>
+								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($itbms, 2); ?></strong></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td colspan="2" align="right">Total:</td>
+								<td align="right"><?php echo $total_quantity; ?></td>
+								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($total_price, 2); ?></strong></td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>		
+					<?php
+					} else {
+					?>
+					<div class="no-records">Tu carrito esta vacio</div>
+					<?php 
+					}
+					?>
+				</div>	
 		</header><!--/.header-top-->
 		<!--header-top end -->
 
@@ -217,55 +345,55 @@ $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
 						<li>
 							<div class="single-list-topics-content">
 								<div class="single-list-topics-icon">
-									<a href="productoNitro.html">
+									<a href="productoNitro.php">
 									<img src="assets/img/nitro.jpg" alt="Acer Nitro" class="topic-image">
 									</a>
 								</div>
-								<h2><a href="productoNitro.html">Acer - Nitro</a></h2>
+								<h2><a href="productoNitro.php">Acer - Nitro</a></h2>
 								<p>10 Unidades</p>
 							</div>
 						</li>
 						<li>
 							<div class="single-list-topics-content">
 								<div class="single-list-topics-icon">
-									<a href="productoPredator.html">
+									<a href="productoPredator.php">
 									<img src="assets/img/predator.jpg" alt="Acer Predator" class="topic-image">
 									</a>
 								</div>
-								<h2><a href="productoPredator.html">Acer - Predator</a></h2>
+								<h2><a href="productoPredator.php">Acer - Predator</a></h2>
 								<p>7 Unidades</p>
 							</div>
 						</li>
 						<li>
 							<div class="single-list-topics-content">
 								<div class="single-list-topics-icon">
-									<a href="productoRog_Zephayrus.html">
+									<a href="productoRog_Zephayrus.php">
 									<img src="assets/img/rog_zephayrus.jpg" alt="Rog Zephayrus" class="topic-image">
 									</a>
 								</div>
-								<h2><a href="productoRog_Zephayrus.html">Asus - Rog Zephayrus</a></h2>
+								<h2><a href="productoRog_Zephayrus.php">Asus - Rog Zephayrus</a></h2>
 								<p>15 Unidades</p>
 							</div>
 						</li>
 						<li>
 							<div class="single-list-topics-content">
 								<div class="single-list-topics-icon">
-									<a href="productoRog_strix.html">
+									<a href="productoRog_strix.php">
 									<img src="assets/img/rog_strix.jpg" alt="Rog Strix" class="topic-image">
 									</a>
 								</div>
-								<h2><a href="productoRog_strix.html">Asus - Rog Strix</a></h2>
+								<h2><a href="productoRog_strix.php">Asus - Rog Strix</a></h2>
 								<p>12 Unidades</p>
 							</div>
 						</li>
 						<li>
 							<div class="single-list-topics-content">
 								<div class="single-list-topics-icon">
-									<a href="productoOmen.html">
+									<a href="productoOmen.php">
 									<img src="assets/img/omen.jpg" alt="HP Omen" class="topic-image">
 									</a>
 								</div>
-								<h2><a href="productoOmen.html">HP Omen</a></h2>
+								<h2><a href="productoOmen.php">HP Omen</a></h2>
 								<p>9 Unidades</p>
 							</div>
 						</li>
