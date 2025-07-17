@@ -1,78 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <?php
 session_start(); // Start the session
 $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
-require_once("dbcontroller.php");
 $conn = mysqli_connect("localhost","root","12345678","proyecto");
-$db_handle = new DBController();
-if(!empty($_GET["action"])) {
-switch($_GET["action"]) {
-	case "add":
-		if(!empty($_POST["quantity"])) {
-			$productByCode = $db_handle->runQuery("CALL `pa_productoPorCodigo`('" . $_GET["code"] . "')");
-			$itemArray = array($productByCode[0]["code"]=>array('name'=>$productByCode[0]["name"], 'code'=>$productByCode[0]["code"], 'quantity'=>$_POST["quantity"], 'price'=>$productByCode[0]["price"], 'image'=>$productByCode[0]["image"]));
-			
-			if(!empty($_SESSION["cart_item"])) {
-				if(in_array($productByCode[0]["code"],array_keys($_SESSION["cart_item"]))) {
-					foreach($_SESSION["cart_item"] as $k => $v) {
-							if($productByCode[0]["code"] == $k) {
-								if(empty($_SESSION["cart_item"][$k]["quantity"])) {
-									$_SESSION["cart_item"][$k]["quantity"] = 0;
-								}
-								$_SESSION["cart_item"][$k]["quantity"] += $_POST["quantity"];
-							}
-					}
-				} else {
-					$_SESSION["cart_item"] = array_merge($_SESSION["cart_item"],$itemArray);
-				}
-			} else {
-				$_SESSION["cart_item"] = $itemArray;
-			}
-		}
-	break;
-	case "remove":
-		if(!empty($_SESSION["cart_item"])) {
-			foreach($_SESSION["cart_item"] as $k => $v) {
-					if($_GET["code"] == $k)
-						unset($_SESSION["cart_item"][$k]);				
-					if(empty($_SESSION["cart_item"]))
-						unset($_SESSION["cart_item"]);
-			}
-		}
-	break;
-	case "empty":
-		unset($_SESSION["cart_item"]);
-	break;
-	case "buy":
-		$resultUser = mysqli_query($conn, "SELECT id_usuario FROM usuario WHERE username = '". $session_value ."'");
-		$varusuario = mysqli_fetch_row($resultUser);
-		mysqli_query($conn, "INSERT into factura(id_usuario) values (". $varusuario[0] .")");
-		$resultID = mysqli_query($conn,"SELECT id FROM factura ORDER BY id DESC LIMIT 1");
-		$idFactura = mysqli_fetch_row($resultID);
-		foreach ($_SESSION["cart_item"] as $item){
-			$resultCode = mysqli_query($conn, "SELECT id FROM producto WHERE code = '". $item["code"] ."'");
-			$idProd = mysqli_fetch_row($resultCode);
-			mysqli_query($conn, "INSERT into factura_producto(id_factura, id_producto, cantidad) values (". $idFactura[0] .", " . $idProd[0] .", " . $item["quantity"] . ")");
-		}
-		unset($_SESSION["cart_item"]);
-	break;	
+$resultUser = mysqli_query($conn, "SELECT id_usuario FROM usuario WHERE username = '". $session_value ."'");
+$varusuario = mysqli_fetch_row($resultUser);
+$resultado = mysqli_query($conn, "CALL `pa_ListaFacturas`(" . $varusuario[0] . ")");
+$lista = mysqli_fetch_all($resultado, MYSQLI_ASSOC);
+mysqli_free_result($resultado);
+// Flush remaining result sets, if any
+while (mysqli_next_result($conn)) {
+    if ($extraResult = mysqli_store_result($conn)) {
+        mysqli_free_result($extraResult);
+    }
 }
-}
+$result = mysqli_query($conn, "CALL `pa_FacturasUsuario`(" . $varusuario[0] . ")");
+$rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
 ?>
-<html lang="es">
 <head>
         <!-- meta data -->
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="assets/css/producto.css">
         <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
         <!--font-family-->
 		<link href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
         
         <!-- title of site -->
-        <title>HP Omen</title>
+        <title>Pagina inicial</title>
 
         <!-- For favicon png -->
 		<link rel="shortcut icon" type="image/icon" href="assets/logo/favicon.png"/>
@@ -104,7 +60,6 @@ switch($_GET["action"]) {
         
         <!--responsive.css-->
         <link rel="stylesheet" href="assets/css/responsive.css">
-
 		<link href="style.css" type="text/css" rel="stylesheet" />
         
         <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
@@ -114,8 +69,8 @@ switch($_GET["action"]) {
 			<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 			<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
         <![endif]-->
-</head>
-<body>
+    </head>
+    <body>
     <!--[if lte IE 9]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience and security.</p>
         <![endif]-->
@@ -204,7 +159,7 @@ switch($_GET["action"]) {
 							}
 						})
 					</script>
-					<a id="btnEmpty" href="productoOmen.php?action=empty">Vaciar carrito</a>
+					<a id="btnEmpty" href="perfil.php?action=empty">Vaciar carrito</a>
 					<?php
 					if(isset($_SESSION["cart_item"])){
 						$total_quantity = 0;
@@ -232,7 +187,7 @@ switch($_GET["action"]) {
 											<td style="text-align:right;"><?php echo $item["quantity"]; ?></td>
 											<td  style="text-align:right;"><?php echo "$ ".$item["price"]; ?></td>
 											<td  style="text-align:right;"><?php echo "$ ". number_format($item_price,2); ?></td>
-											<td style="text-align:center;"><a href="productoOmen.php?action=remove&code=<?php echo $item["code"]; ?>" class="btnRemoveAction"><img src="assets/img/icon-delete.png" alt="Remove Item" /></a></td>
+											<td style="text-align:center;"><a href="perfil.php?action=remove&code=<?php echo $item["code"]; ?>" class="btnRemoveAction"><img src="assets/img/icon-delete.png" alt="Remove Item" /></a></td>
 											</tr>
 											<?php
 											$total_quantity += $item["quantity"];
@@ -265,7 +220,7 @@ switch($_GET["action"]) {
 								<td></td>
 								<td></td>
 								<td></td>
-								<td><a id="btnComprarCarrito" href="productoOmen.php?action=buy">Comprar</a></td>
+								<td><a id="btnComprarCarrito" href="productoNitro.php?action=buy">Comprar</a></td>
 							</tr>
 						</tbody>
 					</table>		
@@ -306,7 +261,7 @@ switch($_GET["action"]) {
 			                    <li class="scroll"><a href="#explore">Explora</a></li>
 			                    <li class="scroll"><a href="#reviews">Crítica</a></li>
 			                    <li class="scroll"><a href="#blog">Otros</a></li>
-			                    <li class="scroll"><a href="#contact">Registro</a></li>
+			                    <li class="scroll"><a href="index.php/#contact">Registro</a></li>
 			                </ul><!--/.nav -->
 			            </div><!-- /.navbar-collapse -->
 			        </div><!--/.container-->
@@ -316,19 +271,62 @@ switch($_GET["action"]) {
 		    <div class="clearfix"></div>
         
 			<!-- Contenedor de producto -->
-        <section class="producto">
-            <div class="contenedorProducto">
-                <div class="imagenProducto"><img src="assets/img/omen.jpg" alt="Acer Nitro" class="imagenLaptop"></div>
-                <div class="contenedorDetalles">
-                    <div class="nombreProducto">HP OMEN 15.6" Gaming Laptop FHD IPS 144Hz Display (AMD Ryzen 9 5900HX 8-Core, 1920x1080, 16GB RAM, 512GB PCIe SSD, RTX 3070 8GB, RGB Backlit KB, VR Ready, HD Webcam, WiFi 6, BT 5.2, Win 11 Home) </div>
-                    <div class="precioProducto">$1,749.00 </div>
-                    <div class="impuestos"> +impuestos</div>
-                    <form method="post" action="productoOmen.php?action=add&code=LPFHD">
-                    <div class="botonComprar"> <input type="submit" value="AGREGAR AL CARRITO" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
-					</form>
-                    <div class="descripcionProducto">Procesador AMD Ryzen 9 5900HX de 5.ª generación a 3,3 GHz (hasta 4,6 GHz, 16 MB de caché, 8 núcleos); tarjeta gráfica dedicada RTX 3070 de 8 GB GDDR6; 16 GB DDR4 SODIMM; Wi-Fi 6 AX200, Bluetooth 5.2, Ethernet LAN (RJ-45), cámara web HD de 720p, teclado retroiluminado RGB. Pantalla IPS Full HD de 15,6" (1920 x 1080) con frecuencia de actualización de 144 Hz; fuente de alimentación de 200 W, batería de 6 celdas y 71 Wh; color negro oscuro. SSD PCIe NVMe de 512 GB; 3 puertos USB 3.1 Gen1, 1 HDMI, USB 3.1 Tipo-C Gen1, lector de tarjetas SD, sin unidad óptica, conector combinado para auriculares/micrófono. Windows 11 Home de 64 bits. 1 año de garantía del fabricante de MichaelElectronics2 (actualizado profesionalmente por MichaelElectronics2).</div>
+        <section>
+            <div id="lista-facturas">
+                <?php
+                foreach ($lista as $listas){
+                    echo "Factura #" . $listas["IdFactura"];
+                ?>
+                <table class="tbl-cart" cellpadding="10" cellspacing="1">
+                                        <tbody>
+                                            <tr>
+                                                <th style="text-align:left;">Nombre</th>
+                                                <th style="text-align:left;">Codigo</th>
+                                                <th style="text-align:right;" width="5%">Cantidad</th>
+                                                <th style="text-align:right;" width="10%">Precio unitario</th>
+                                                <th style="text-align:right;" width="10%">Precio</th>
+                                            </tr>	
+                                            <?php		
+                                                    foreach ($rows as $row){
+                                                    if ($listas["IdFactura"] == $row["IdFactura"] ){
+                                                    $item_price = $row["Precio"]*$row["Cantidad"];
+                                                    ?>
+                                                            <tr>
+                                                            <td><?php echo $row["Nombre"]; ?></td>
+                                                            <td><?php echo $row["Codigo"]; ?></td>
+                                                            <td style="text-align:right;"><?php echo $row["Cantidad"]; ?></td>
+                                                            <td  style="text-align:right;"><?php echo "$ ".$row["Precio"]; ?></td>
+                                                            <td  style="text-align:right;"><?php echo "$ ". number_format($item_price,2); ?></td>
+                                                            </tr>
+                                                            <?php
+                                                            $total_quantity += $row["Cantidad"];
+                                                            $subtotal_price += ($row["Precio"]*$row["Cantidad"]);
+                                                            $itbms = $subtotal_price * 0.07;
+                                                            $total_price = $subtotal_price + $itbms;
+                                                    }}
+                                            ?>
+                                            <tr>
+                                                <td colspan="2" align="right">Subtotal:</td>
+                                                <td align="right"></td>
+                                                <td align="right" colspan="2"><strong><?php echo "$ ".number_format($subtotal_price, 2); ?></strong></td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" align="right">Itbms:</td>
+                                                <td align="right"></td>
+                                                <td align="right" colspan="2"><strong><?php echo "$ ".number_format($itbms, 2); ?></strong></td>
+                                                <td></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2" align="right">Total:</td>
+                                                <td align="right"><?php echo $total_quantity; ?></td>
+                                                <td align="right" colspan="2"><strong><?php echo "$ ".number_format($total_price, 2); ?></strong></td>
+                                                <td></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                    <?php }?>
                 </div>
-            </div>
         </section>
             <!--footer start-->
 		<footer id="footer"  class="footer">
@@ -347,7 +345,7 @@ switch($_GET["action"]) {
 			                    <li class="scroll"><a href="#explore">Explora</a></li>
 			                    <li class="scroll"><a href="#reviews">Crítica</a></li>
 			                    <li class="scroll"><a href="#blog">Otros</a></li>
-			                    <li class="scroll"><a href="#contact">Registro</a></li>
+			                    <li class="scroll"><a href="index.php">Registro</a></li>
 			                    <li class=" scroll"><a href="#contact">Mi cuenta</a></li>
 			                </ul><!--/.nav -->
 			           	</div>
@@ -412,3 +410,4 @@ switch($_GET["action"]) {
         <!--Custom JS-->
         <script src="assets/js/custom.js"></script>
 </body>
+</html>

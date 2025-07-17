@@ -3,6 +3,7 @@
 session_start(); // Start the session
 $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
 require_once("dbcontroller.php");
+$conn = mysqli_connect("localhost","root","12345678","proyecto");
 $db_handle = new DBController();
 if(!empty($_GET["action"])) {
 switch($_GET["action"]) {
@@ -40,6 +41,19 @@ switch($_GET["action"]) {
 		}
 	break;
 	case "empty":
+		unset($_SESSION["cart_item"]);
+	break;
+	case "buy":
+		$resultUser = mysqli_query($conn, "SELECT id_usuario FROM usuario WHERE username = '". $session_value ."'");
+		$varusuario = mysqli_fetch_row($resultUser);
+		mysqli_query($conn, "INSERT into factura(id_usuario) values (". $varusuario[0] .")");
+		$resultID = mysqli_query($conn,"SELECT id FROM factura ORDER BY id DESC LIMIT 1");
+		$idFactura = mysqli_fetch_row($resultID);
+		foreach ($_SESSION["cart_item"] as $item){
+			$resultCode = mysqli_query($conn, "SELECT id FROM producto WHERE code = '". $item["code"] ."'");
+			$idProd = mysqli_fetch_row($resultCode);
+			mysqli_query($conn, "INSERT into factura_producto(id_factura, id_producto, cantidad) values (". $idFactura[0] .", " . $idProd[0] .", " . $item["quantity"] . ")");
+		}
 		unset($_SESSION["cart_item"]);
 	break;	
 }
@@ -152,7 +166,7 @@ switch($_GET["action"]) {
 									}
 									else{
 										document.getElementById("Inicio").innerHTML = myvar;
-										document.getElementById("Inicio").href = "";
+										document.getElementById("Inicio").href = "perfil.php";
 									}
 								</script>
 							</li>
@@ -244,6 +258,14 @@ switch($_GET["action"]) {
 								<td align="right"><?php echo $total_quantity; ?></td>
 								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($total_price, 2); ?></strong></td>
 								<td></td>
+							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td><a id="btnComprarCarrito" href="index.php?action=buy">Comprar</a></td>
 							</tr>
 						</tbody>
 					</table>		

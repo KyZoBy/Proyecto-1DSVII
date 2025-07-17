@@ -3,6 +3,7 @@
 session_start(); // Start the session
 $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
 require_once("dbcontroller.php");
+$conn = mysqli_connect("localhost","root","12345678","proyecto");
 $db_handle = new DBController();
 if(!empty($_GET["action"])) {
 switch($_GET["action"]) {
@@ -40,6 +41,19 @@ switch($_GET["action"]) {
 		}
 	break;
 	case "empty":
+		unset($_SESSION["cart_item"]);
+	break;
+	case "buy":
+		$resultUser = mysqli_query($conn, "SELECT id_usuario FROM usuario WHERE username = '". $session_value ."'");
+		$varusuario = mysqli_fetch_row($resultUser);
+		mysqli_query($conn, "INSERT into factura(id_usuario) values (". $varusuario[0] .")");
+		$resultID = mysqli_query($conn,"SELECT id FROM factura ORDER BY id DESC LIMIT 1");
+		$idFactura = mysqli_fetch_row($resultID);
+		foreach ($_SESSION["cart_item"] as $item){
+			$resultCode = mysqli_query($conn, "SELECT id FROM producto WHERE code = '". $item["code"] ."'");
+			$idProd = mysqli_fetch_row($resultCode);
+			mysqli_query($conn, "INSERT into factura_producto(id_factura, id_producto, cantidad) values (". $idFactura[0] .", " . $idProd[0] .", " . $item["quantity"] . ")");
+		}
 		unset($_SESSION["cart_item"]);
 	break;	
 }
@@ -152,7 +166,7 @@ switch($_GET["action"]) {
 									}
 									else{
 										document.getElementById("Inicio").innerHTML = myvar;
-										document.getElementById("Inicio").href = "";
+										document.getElementById("Inicio").href = "perfil.php";
 									}
 								</script>
 							</li>
@@ -245,6 +259,14 @@ switch($_GET["action"]) {
 								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($total_price, 2); ?></strong></td>
 								<td></td>
 							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td><a id="btnComprarCarrito" href="productoPredator.php?action=buy">Comprar</a></td>
+							</tr>
 						</tbody>
 					</table>		
 					<?php
@@ -302,7 +324,7 @@ switch($_GET["action"]) {
                     <div class="precioProducto">$1,139.99 </div>
                     <div class="impuestos"> +impuestos</div>
                     <form method="post" action="productoPredator.php?action=add&code=LPNEO16">
-                    <div class="botonComprar"> <input type="submit" value="COMPRAR" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
+                    <div class="botonComprar"> <input type="submit" value="AGREGAR AL CARRITO" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
 					</form>
                     <div class="descripcionProducto">Este ordenador incluye 16 GB de RAM | SSD de 1024 GB | HDD de 1 TB. Pantalla IPS de 15,6'' Full HD (1920 x 1080) con retroiluminación LED y frecuencia de actualización de 144 Hz. Es un SoC de ocho núcleos de alta gama para portátiles gaming y estaciones de trabajo móviles. Pertenece a la familia Tiger Lake H45 y se anunció a mediados de 2021. El 11800H incorpora 8 núcleos y 16 subprocesos con 24 MB de caché L3, una velocidad base de 2,3 GHz a 45 W, además de frecuencias turbo que van desde 4,6 GHz en hasta 2 núcleos hasta 4,2 GHz en todos los núcleos. Además, cuenta con un diseño de GPU Xe integrado con 32 unidades de ejecución y velocidades de reloj de hasta 1450 MHz. GPU para computadora portátil NVIDIA GeForce RTX 3070, teclado retroiluminado RGB de 4 zonas, cámara web HD (1280 x 720) compatible con Super High Dynamic Range, Windows 11 Home.</div>
                 </div>

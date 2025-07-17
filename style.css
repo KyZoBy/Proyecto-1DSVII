@@ -2,7 +2,11 @@
 	margin: 40px;
 	display: none;
 }
-
+#lista-facturas{
+	width: 80%;
+	margin: auto;
+	word-break:keep-all
+}
 #product-grid {
 	margin: 40px;
 }

@@ -3,6 +3,7 @@
 session_start(); // Start the session
 $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
 require_once("dbcontroller.php");
+$conn = mysqli_connect("localhost","root","12345678","proyecto");
 $db_handle = new DBController();
 if(!empty($_GET["action"])) {
 switch($_GET["action"]) {
@@ -40,6 +41,19 @@ switch($_GET["action"]) {
 		}
 	break;
 	case "empty":
+		unset($_SESSION["cart_item"]);
+	break;
+	case "buy":
+		$resultUser = mysqli_query($conn, "SELECT id_usuario FROM usuario WHERE username = '". $session_value ."'");
+		$varusuario = mysqli_fetch_row($resultUser);
+		mysqli_query($conn, "INSERT into factura(id_usuario) values (". $varusuario[0] .")");
+		$resultID = mysqli_query($conn,"SELECT id FROM factura ORDER BY id DESC LIMIT 1");
+		$idFactura = mysqli_fetch_row($resultID);
+		foreach ($_SESSION["cart_item"] as $item){
+			$resultCode = mysqli_query($conn, "SELECT id FROM producto WHERE code = '". $item["code"] ."'");
+			$idProd = mysqli_fetch_row($resultCode);
+			mysqli_query($conn, "INSERT into factura_producto(id_factura, id_producto, cantidad) values (". $idFactura[0] .", " . $idProd[0] .", " . $item["quantity"] . ")");
+		}
 		unset($_SESSION["cart_item"]);
 	break;	
 }
@@ -152,7 +166,7 @@ switch($_GET["action"]) {
 									}
 									else{
 										document.getElementById("Inicio").innerHTML = myvar;
-										document.getElementById("Inicio").href = "";
+										document.getElementById("Inicio").href = "perfil.php";
 									}
 								</script>
 							</li>
@@ -245,8 +259,16 @@ switch($_GET["action"]) {
 								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($total_price, 2); ?></strong></td>
 								<td></td>
 							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td><a id="btnComprarCarrito" href="productoRog_strix.php?action=buy">Comprar</a></td>
+							</tr>
 						</tbody>
-					</table>		
+					</table>	
 					<?php
 					} else {
 					?>
@@ -302,7 +324,7 @@ switch($_GET["action"]) {
                     <div class="precioProducto">$1,244.78 </div>
                     <div class="impuestos"> +impuestos</div>
                     <form method="post" action="productoRog_strix.php?action=add&code=LPG16">
-                    <div class="botonComprar"> <input type="submit" value="COMPRAR" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
+                    <div class="botonComprar"> <input type="submit" value="AGREGAR AL CARRITO" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
 					</form>
                     <div class="descripcionProducto">POTENCIA TU JUEGO: Gana más juegos con Windows 11, un procesador Intel Core i7-13650HX de 13.ª generación y una GPU NVIDIA GeForce RTX 4060 para portátiles con 140 W de TGP máximo. MEMORIA Y ALMACENAMIENTO ULTRA RÁPIDOS: Realiza múltiples tareas con agilidad gracias a sus 16 GB de memoria DDR5 a 4800 MHz y 1 TB de SSD PCIe Gen4. REFRIGERACIÓN INTELIGENTE ROG: El Strix G16 incorpora metal líquido Conductonaut Extreme de Thermal Grizzly en la CPU y un tercer ventilador de entrada, entre otras características premium, para un rendimiento más sostenido durante largas sesiones de juego. PANTALLA RÁPIDA: El Strix G16 cuenta con un panel FHD de 165 Hz, 100 % sRGB, validación Pantone, entre otras características premium. XBOX GAME PASS: Obtén un pase gratuito de 90 días y accede a más de 100 juegos de alta calidad. Con juegos añadidos constantemente, siempre hay algo nuevo para jugar.</div>
                 </div>

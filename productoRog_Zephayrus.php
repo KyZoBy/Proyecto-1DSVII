@@ -3,6 +3,7 @@
 session_start(); // Start the session
 $session_value=(isset($_SESSION['usuario']))?$_SESSION['usuario']:'';
 require_once("dbcontroller.php");
+$conn = mysqli_connect("localhost","root","12345678","proyecto");
 $db_handle = new DBController();
 if(!empty($_GET["action"])) {
 switch($_GET["action"]) {
@@ -42,6 +43,19 @@ switch($_GET["action"]) {
 	case "empty":
 		unset($_SESSION["cart_item"]);
 	break;	
+	case "buy":
+		$resultUser = mysqli_query($conn, "SELECT id_usuario FROM usuario WHERE username = '". $session_value ."'");
+		$varusuario = mysqli_fetch_row($resultUser);
+		mysqli_query($conn, "INSERT into factura(id_usuario) values (". $varusuario[0] .")");
+		$resultID = mysqli_query($conn,"SELECT id FROM factura ORDER BY id DESC LIMIT 1");
+		$idFactura = mysqli_fetch_row($resultID);
+		foreach ($_SESSION["cart_item"] as $item){
+			$resultCode = mysqli_query($conn, "SELECT id FROM producto WHERE code = '". $item["code"] ."'");
+			$idProd = mysqli_fetch_row($resultCode);
+			mysqli_query($conn, "INSERT into factura_producto(id_factura, id_producto, cantidad) values (". $idFactura[0] .", " . $idProd[0] .", " . $item["quantity"] . ")");
+		}
+		unset($_SESSION["cart_item"]);
+	break;
 }
 }
 ?>
@@ -151,7 +165,7 @@ switch($_GET["action"]) {
 									}
 									else{
 										document.getElementById("Inicio").innerHTML = myvar;
-										document.getElementById("Inicio").href = "";
+										document.getElementById("Inicio").href = "perfil.php";
 									}
 								</script>
 							</li>
@@ -244,8 +258,16 @@ switch($_GET["action"]) {
 								<td align="right" colspan="2"><strong><?php echo "$ ".number_format($total_price, 2); ?></strong></td>
 								<td></td>
 							</tr>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td><a id="btnComprarCarrito" href="productoRog_Zephayrus.php?action=buy">Comprar</a></td>
+							</tr>
 						</tbody>
-					</table>		
+					</table>
 					<?php
 					} else {
 					?>
@@ -301,7 +323,7 @@ switch($_GET["action"]) {
                     <div class="precioProducto">$1,599.99 </div>
                     <div class="impuestos"> +impuestos</div>
                     <form method="post" action="productoRog_Zephayrus.php?action=add&code=LPG14">
-                    <div class="botonComprar"> <input type="submit" value="COMPRAR" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
+                    <div class="botonComprar"> <input type="submit" value="AGREGAR AL CARRITO" class="boton"/><input type="text" class="product-quantity" name="quantity" value="1" size="2"/></div>
 					</form>
                     <div class="descripcionProducto">El ROG Zephyrus G14 ha sido rediseñado con un chasis de aluminio premium completamente nuevo para mayor durabilidad y elegancia. Con un grosor de 0,63 pulgadas y un peso de tan solo 3,31 libras, esta potencia para juegos combina portabilidad con tecnología de vanguardia. Con Windows 11 y una GPU NVIDIA GeForce RTX 4060, el Zephyrus G14 logra un rendimiento de juego incomparable. El procesador AMD Ryzen™ 9 8945HS mejora aún más la productividad con 16 TOPS en rendimiento de IA. El Zephyrus G14 cuenta con una pantalla OLED ROG Nebula. Disfrute de tiempos de respuesta rápidos de 0,2 ms, una resolución vívida de 3K y una frecuencia de actualización fluida de 120 Hz. Mejore su experiencia de audio con nuevos woofers mejorados, que ofrecen un aumento de volumen del 252 %, una frecuencia de graves de 100 Hz y compatibilidad con Dolby Atmos. Para sesiones de juego intensas, el enfriamiento inteligente ROG integra ventiladores Arc Flow de segunda generación aerodinámicos y de metal líquido para mantener el máximo rendimiento.</div>
                 </div>

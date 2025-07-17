@@ -49,6 +49,17 @@ body{
 	overflow-x:hidden;
 }
 
+#btnComprarCarrito {
+	background-color: #ffffff;
+	border: #d00000 1px solid;
+	padding: 5px 10px;
+	color: #d00000;
+	float: right;
+	text-decoration: none;
+	border-radius: 3px;
+	margin: 10px 0px;
+}
+
 a,a:hover,a:active,a:focus {
 	display:inline-block;
 	text-decoration:none;
@@ -959,3 +970,5 @@ nav.navbar.bootsnav .navbar-toggle i{color: #ff545a;}
     border-radius: 8px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
+
+
